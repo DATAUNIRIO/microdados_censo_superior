@@ -1,0 +1,244 @@
+---
+title: "Análise dos Dados da UNIRIO no Censo da Educação Superior"
+author: "Steven Dutt Ross"
+output: 
+   html_document:
+     theme: flatly
+     highlight: tango
+     toc: true
+     toc_float: true
+     code_folding: hide
+---
+
+<head>
+<style>
+body {
+    background-color: #e0feff;
+}
+
+.label-success {
+    background-color: #660099;
+}
+.label {
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 110%;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .25em;
+    background-color: #103c5e;
+}
+.numero {
+    float: center;
+    border-radius: 5px;
+    background-color: #0e5766; /* For browsers that do not support gradients */
+    background: -moz-linear-gradient(#0c2a35,#0e5766); /* For Firefox 3.6 to 15 */
+    background: linear-gradient(#0c2a35,#0e5766); /* Standard syntax */
+    color: #ffffff;
+    overflow: auto;
+    margin: 20px 20px 20px 20px;
+    padding-top: 1px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+    padding-left: 10px;
+    font-size: 200%;
+    font-weight: 700;
+
+   }
+
+
+a:link {
+    color: #000000;
+}
+
+/* visited link */
+a:visited {
+    color: #000000;
+}
+
+
+
+</style>
+</head>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+ALUNO_UNIRIO16<-readRDS("C:/Users/Steven/Documents/GitHub/microdados_censo_superior_2016/ALUNO_UNIRIO16.rds")
+ALUNO_UNIRIO16<-droplevels(ALUNO_UNIRIO16)
+
+```
+
+# O uso do R para fazer uma análise do Censo da Educação Superior
+<span class="label label-sucess">R Markdown</span>
+<span class="label label-sucess">Gestão Pública</span>
+<span class="label label-sucess">Censo Educação Superior</span>
+<span class="label label-sucess">UNIRIO</span>
+<br>
+<br>
+
+## Introdução
+
+Diversos professores e alunos já me perguntaram quantos alunos estão na Universidade. Lembro que eu não consegui responder rapidamente a essa pergunta. Todavia, com uma maior experiencia com o R e com acesso aos dados do inep já podemos responder a essa pergunta.
+
+Neste artigo vamos descobrir quantos alunos a UNIRIO tem. Mais do que isso, vamos ver o perfil do aluno. Paraa isso, temos que acessar os microdados do INEP e fazer um filtro para os alunos da Unirio. Felizmente, o **DATAUNIRIO** já fez isso e colocou a base de dados da UNIRIO para *download*. Logo, neste tutorial, vamos aprender a usar o R para fazer uma análise sobre a Universidade.
+
+A base de dados está no formato RDS e pode ser baixada do repositório de dados do DATAUNIRIO. Para carregar a base de dados no **R** precisamos utilizar o código abaixo.
+
+## Carregando a Base de Dados
+
+```{r, eval=FALSE}
+# Metodo 1 ('Nao funcionou')
+#library(RCurl)
+#siteURL <- ("https://raw.githubusercontent.com/DATAUNIRIO/microdados_censo_superior_2016/master/ALUNO_UNIRIO16.rds")
+#download.file(siteURL,"ALUNO_UNIRIO16.rds", method="curl")
+#ALUNO_UNIRIO16<-readRDS("ALUNO_UNIRIO16.rds")
+
+# Metodo 2 
+library(curl)
+siteURL <- ("https://raw.githubusercontent.com/DATAUNIRIO/microdados_censo_superior_2016/master/ALUNO_UNIRIO16.rds")
+tmp <- tempfile()
+curl_download(siteURL, tmp)
+ALUNO_UNIRIO16<-readRDS(tmp)
+# Eliminar os niveis dos fatores nao utilizado (drop factor levels in a dataset)
+ALUNO_UNIRIO16<-droplevels(ALUNO_UNIRIO16)
+
+```
+
+Já com o download da base de dados, podemos importar para o R com o comando: 
+```
+readRDS(nomedabasededados)
+
+```
+
+Com a base de dados importada para o **R**, podemos verificar quantos alunos a UNIRIO tem (de acordo com o INEP)  
+
+## Quantos alunos a UNIRIO tem?
+
+```{r,results='asis', echo=FALSE, warning=FALSE,message=FALSE,fig.align='center'}
+print("<div class='numero'>")
+paste0("Total de Alunos: ", nrow(ALUNO_UNIRIO16))
+print("</div>")
+
+```
+<br>
+Para fazer isso no **R**, precisamos executar os comandos:
+```nrow(ALUNO_UNIRIO16)``` ou ```dim(ALUNO_UNIRIO16)```
+
+De acordo com o INEP, a UNIRIO tem quase 19 mil alunxs.
+
+## Qual o curso da Universidade mais frequentado?
+
+Para saber quais são as variáveis que o INEP disponibiliza sobre a UNIRIO, precisamos executar o comando:```names(ALUNO_UNIRIO16)```. Outros comandos interessantes são ```str(ALUNO_UNIRIO16)``` e ```head(ALUNO_UNIRIO16)```
+
+Após esta etapa, você pode escolher uma variável para fazer análise, ou seja, uma variável de interesse. (escolhi verficar quantos alunos temos em cada curso). Para fazer esta etapa, podemos usar o comando ```table```. Esta função é aplicada na base de dados *ALUNO_UNIRIO16* e na variável *NO_CURSO*. Desse modo, temos:
+
+```{r, eval=FALSE}
+table(ALUNO_UNIRIO16$NO_CURSO)
+```
+
+```{r, echo=FALSE}
+#NO_OCDE ou NO_CURSO
+tabela1<-table(ALUNO_UNIRIO16$NO_CURSO)
+tabela1<-data.frame(tabela1)
+colnames(tabela1)<-c("Categoria","Frequencia")
+library(DT)
+DT::datatable(
+  tabela1,
+  fillContainer = FALSE, options = list(pageLength = 5))
+```
+
+
+## Qual a cor declarada pelos alunos da UNIRIO?
+
+Podemos fazer tantas perguntas para a base de dados quanto quiser. Por exemplo, qual a cor autodeclarada pelos alunos da Universidade?
+<br>
+<br>
+Para responder a essa pergunta, vamos fazer uma visualização da tabela. Em primeiro lugar, vamos criar o mesmo código que o anterior, mas vamos utiliza-lo na variável *DS_COR_RACA_ALUNO* (Descrição da Cor/Raça do Aluno). Depois vamos "guarda" essa tabela em um objeto chamado ```tabela1```. Após esse comando, vamos gerar o gráfico. O nome desse gráfico é mosaíco (em inglês, ```mosaicplot```). Para ver o código em R, clique em **Code**.
+
+```{r, comment=NA}
+tabela1<-table(ALUNO_UNIRIO16$DS_COR_RACA_ALUNO)
+par(mar = c(0.5, 8.5, 0.5, 0.5), mgp = c(5, 1, 0),bg="#e0feff")
+library(RColorBrewer)
+pal<-brewer.pal(7,"Reds")
+mosaicplot(tabela1,col=pal,cex.axis = 0.8,las = 3,main="Cor declarada pelos alunos da UNIRIO")
+```
+
+## Qual a situação dos alunos da UNIRIO?
+
+Uma variável que parece ser interessante é a situação dos alunos da Universidade. Nela podemos ver que 19,16% dos alunos tem a matrícula trancada. Isto quer dizer que um em cada cinco alunos trancada. 
+
+```{r, comment=NA}
+tabela1<-table(ALUNO_UNIRIO16$DS_ALUNO_SITUACAO)
+par(mar = c(0.5, 8.5, 0.5, 0.5), mgp = c(5, 1, 0),bg="#e0feff")
+pal<-brewer.pal(6,"Blues")
+mosaicplot(tabela1,col=pal,cex.axis = 0.8,las = 3,main="Situação dos alunos da UNIRIO")
+
+```
+
+```{r,results='asis', echo=FALSE, warning=FALSE,message=FALSE,fig.align='center'}
+print("<div class='numero'>")
+paste0("Percentual de Matrículas Trancadas: ", round(3632/18960*100,2))
+print("</div>")
+
+```
+
+Outros dois aspectos interessantes sobre a universidade são a Modalidade de Ensino e Grau Acadêmico. Eles podem ser vistos nos gráficos abaixo.
+
+```{r, comment=NA}
+contagem = table(ALUNO_UNIRIO16$DS_MODALIDADE_ENSINO)
+nomes = levels(ALUNO_UNIRIO16$DS_MODALIDADE_ENSINO)
+porcent = round(contagem/sum(contagem)*100,2)
+rotulo=paste(nomes," (",porcent,"%",")",sep="")
+par(bg="#e0feff")
+pie(table(ALUNO_UNIRIO16$DS_MODALIDADE_ENSINO),labels=rotulo, main="Modalidade de Ensino",col=c("#ffab44","#155a96"))
+
+contagem = table(ALUNO_UNIRIO16$DS_GRAU_ACADEMICO)
+nomes = levels(ALUNO_UNIRIO16$DS_GRAU_ACADEMICO)
+porcent = round(contagem/sum(contagem)*100,2)
+rotulo=paste(nomes," (",porcent,"%",")",sep="")
+par(bg="#e0feff")
+pie(table(ALUNO_UNIRIO16$DS_GRAU_ACADEMICO),labels=rotulo, main="Grau Acadêmico",col=c("#ffab44","#155a96"))
+```
+
+# Mapa da Origem do Aluno da Universidade
+
+Além disso, podemos ver o estado de origem dos alunos da Universidade. Como previsto a grande maioria é do Rio de Janeiro. Interessante notar que existe 517 alunxs que vieram de São Paulo.
+
+```{r,warning=FALSE,message=FALSE}
+library(brazilmaps)
+# Get de map
+Mapa_brasil <- get_brmap(geo = "State",
+                     geo.filter = NULL,
+                     class = "sf")
+
+library(maptools)
+ library(sp)
+ library(rgdal)
+ library(sf)
+
+tabelamapa<-table(ALUNO_UNIRIO16$CO_UF_NASCIMENTO)
+tabelamapa<-data.frame(tabelamapa)
+invisible(Mapa_basededados <- merge(Mapa_brasil, tabelamapa, by.x = "State", by.y = "Var1", all = TRUE))
+par(bg="#e0feff")
+plot(Mapa_basededados["Freq"])
+```
+
+```{r, echo=FALSE,warning=FALSE,message=NA}
+#library(leaflet)
+#library(magrittr)
+# leaflet(Mapa_basededados) %>%
+#   addPolygons(color = "#444444", weight = 1, smoothFactor = 0.5,
+#               opacity = 1.0, fillOpacity = 0.5,
+#               fillColor = ~colorQuantile("YlOrRd", Freq)(Freq),
+#               highlightOptions = highlightOptions(color = "white", weight = 2,
+#                                                   bringToFront = TRUE), popup = ~as.character(Freq))%>%
+#  addProviderTiles(providers$Esri.WorldImagery)
+```
+
+Existem diversas outras análises possíveis. Encontre a sua!
+
